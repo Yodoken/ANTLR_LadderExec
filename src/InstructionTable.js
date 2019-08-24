@@ -13,7 +13,7 @@ exports.instructionTable = [
     },
     {
         "name": "MOV",
-        "operand": [['dev','num'], 'dev'],
+        "operand": [['dev','num'], ['dev']],
         "left": false,
         "exec": function(ctx) {
             // ###mada サフィックスの扱い

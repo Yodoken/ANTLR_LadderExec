@@ -41,20 +41,50 @@ LadderVisitor.prototype.visitMnemonic = function(ctx) {
   instName = ctx.inst.text.toLowerCase();
   this.context.inst.name = instName;
   this.context.op = [];
+  
   // 命令語テーブルから命令語の定義情報を取得
   var instDef = instructionTable.find(function(v) {
     return v.name.toLowerCase() === instName;
   });
+  if (!instDef) {
+    throw {
+      "error": "Unknown Instruction'"+instName+"'.",
+      "line": ctx.start.line,
+      "col": ctx.start.start
+    };
+  }
+
+  // オペランドの数をチェック
+  if (ctx.op.length != instDef.operand.length) {
+    //console.log(ctx);
+    throw {
+      "error": "Expected operand count is "+instDef.operand.length+". But "+ctx.op.length+".",
+      "line": ctx.start.line,
+      "col": ctx.start.start
+    };
+  }
+
+  // オペランドの解析と種別チェック
   for (i = 0; i < ctx.op.length; i++) {
     var op = this.visit(ctx.op[i])[0];
-    //console.log('op['+i+']:'+op);
+    var res = instDef.operand[i].find(function(v) {
+      return v === op.type;
+    });
+    if (!res) {
+      throw {
+        "error": "Invalid operand.",
+        "line": ctx.start.line,
+        "col": ctx.start.start
+      };
+    }
     this.context.op.push(op);
   }
+
   // 命令語を実行
   if (instDef) {
     instDef.exec(this.context);
   }
-  return this.context;
+  return {};
 };
 
 
