@@ -1,24 +1,13 @@
-var antlr4 = require('antlr4/index');
-var LadderLexer = require('./parser/ladderLexer').LadderLexer;
-var LadderParser = require('./parser/ladderParser').LadderParser;
 var LadderExecutor = require('./LadderExecutor').LadderExecutor;
 
-var chars = new antlr4.InputStream("LD R0\nMOV DM0 DM1");
-var lexer = new LadderLexer(chars);
-var tokens  = new antlr4.CommonTokenStream(lexer);
-var parser = new LadderParser(tokens);
-parser.buildParseTrees = true;
-var tree = parser.mnemonicList();
-//console.log(this.varList);
+var ladder = new LadderExecutor();
+ladder.writeDev('DM0', 100);
+ladder.writeDev('DM1', 20);
+ladder.writeDev('DM2', 40);
+ladder.writeDev('R0', true);
+ladder.writeDev('R1', true);
+ladder.writeDev('R100', true);
 
-var devList = {
-    'DM': {
-        "0": 100,
-        "1": 20,
-        "2": 40
-    },
-    'R': {
-        "0": true
-    }
-};
-console.log(tree.accept(new LadderExecutor(devList)));
+ladder.execute("LD R0\nMOV DM0 DM1");
+
+console.log('DM1:'+ladder.readDev('DM1'));

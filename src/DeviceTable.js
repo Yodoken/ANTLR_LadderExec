@@ -1,12 +1,16 @@
 //////////////////
-// Device Number
+// Parser - Device Number 
 function parseWordDevNo(text) {
+    // とりあえず"ddddd"形式のみ対応(10進数)。
     return parseInt(text);
 }
 
 function parseRelayDevNo(text) {
-    
-    return parseInt(text);
+    // とりあえず"cccbb"形式のみ対応。cはチャンネル(10進数)。bはビット番号(10進数)。
+    text = '00'+text;
+    bits = parseInt(text.substr(text.length - 2));
+    ch = parseInt(text.substr(0, text.length - 2));
+    return ch * 16 + bits;
 }
   
 //////////////////

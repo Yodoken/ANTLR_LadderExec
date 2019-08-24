@@ -1,7 +1,7 @@
 var deviceTable = require('./DeviceTable').deviceTable;
 
 
-module.exports.ParseDevice = function ParseDevice(token) {
+module.exports.parseDevice = function parseDevice(token) {
     if (typeof token != 'string') {
         return null;
     }
@@ -10,10 +10,9 @@ module.exports.ParseDevice = function ParseDevice(token) {
         return 0 === token.indexOf(v.prefix.toLowerCase())
     });
     if (devDef) {
-        console.log(devDef);
         var devNoToken = token.substr(devDef.prefix.length);
         devNo = devDef.parser(devNoToken);
-        if (devNo) {
+        if (devNo != NaN) {
             if (devDef.min <= devNo && devNo <= devDef.max) {
                 return {
                     "devType": devDef.devType,
