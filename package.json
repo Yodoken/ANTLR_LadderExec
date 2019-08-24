@@ -1,0 +1,30 @@
+{
+  "name": "antlr_ladderexec",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "antlr": "antlr -o src/parser -Dlanguage=JavaScript -visitor -no-listener LadderParser.g4 LadderLexer.g4",
+    "start": "node src/index.js",
+    "build": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yodoken/ANTLR_LadderExec.git"
+  },
+  "author": "Kengo Yodogawa",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Yodoken/ANTLR_LadderExec/issues"
+  },
+  "homepage": "https://github.com/Yodoken/ANTLR_LadderExec#readme",
+  "dependencies": {
+    "antlr4": "^4.7.2"
+  },
+  "devDependencies": {
+    "antlr4-webpack-loader": "^0.1.1",
+    "webpack": "^4.39.2",
+    "webpack-cli": "^3.3.7"
+  }
+}
