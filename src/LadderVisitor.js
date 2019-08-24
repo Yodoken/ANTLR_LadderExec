@@ -2,6 +2,7 @@ var LadderLexer = require('./parser/ladderLexer').LadderLexer;
 var LadderParserVisitor = require('./parser/LadderParserVisitor').LadderParserVisitor;
 var parseDevice = require('./DeviceParser').parseDevice;
 var instructionTable = require('./InstructionTable').instructionTable;
+var DeviceTable = require('./DeviceTable');
 
 //////////////////
 // CalcVisitor
@@ -39,6 +40,7 @@ LadderVisitor.prototype.visitMnemonicList = function(ctx) {
 LadderVisitor.prototype.visitMnemonic = function(ctx) {
   // コンテキストを更新
   instName = ctx.inst.text.toLowerCase();
+
   this.context.inst.name = instName;
   this.context.op = [];
   
@@ -100,6 +102,11 @@ LadderVisitor.prototype.visitDevGobal = function(ctx) {
       "device": device
     };
   }
+  if (ctx.ofs) {
+    offset = this.visit(ctx.ofs);
+    //console.log('Offset:'+offset);
+    device.devNo += offset.value;
+  }
   return {
     "type": 'dev',
     "device": device
@@ -115,31 +122,99 @@ LadderVisitor.prototype.visitDevLocal = function(ctx) {
 
 // Visit a parse tree produced by LadderParser#offsetNum.
 LadderVisitor.prototype.visitOffsetNum = function(ctx) {
-  return this.visitChildren(ctx);
+  var num = this.visit(ctx.num);
+  //console.log(num);
+  return num;
 };
 
 
 // Visit a parse tree produced by LadderParser#offsetDev.
 LadderVisitor.prototype.visitOffsetDev = function(ctx) {
-  return this.visitChildren(ctx);
+  //console.log("-- visitDevGobal");
+  var devToken = ctx.getToken(LadderLexer.GLOBAL_DEVICE, 0);
+  var device = parseDevice(devToken.symbol.text);
+  if ("error" in device) {
+    return {
+      "error": "Invalid device.",
+      "device": device
+    };
+  }
+  
+  // Zのみ
+  if (device.devType != DeviceTable.getDevType('z')) {
+    return {
+      "error": "Invalid device.",
+      "device": device
+    };
+  }
+
+  // 値を返す
+  var val = this.context.devPool.read(device);
+  return {
+    "type": 'num',
+    "dataType": 'int',
+    "value": val
+  };
 };
 
 
 // Visit a parse tree produced by LadderParser#numHex.
 LadderVisitor.prototype.visitNumHex = function(ctx) {
-  return this.visitChildren(ctx);
+  var token = ctx.getToken(LadderLexer.HEXADECIMAL, 0);
+  if (token != null) {
+    text = token.symbol.text.toLowerCase();
+    head = text.substr(0,1);
+    if ((head === 'h') || (head === '$')) {
+      text = text.substr(1);
+    }
+    var val = parseInt(text, 16);
+    return {
+      "type":"num",
+      "dataType":"int",
+      "value":val
+    };
+  }
+  throw {"error": "Internal error."};
 };
 
 
 // Visit a parse tree produced by LadderParser#numFloat.
 LadderVisitor.prototype.visitNumFloat = function(ctx) {
-  return this.visitChildren(ctx);
+  var token = ctx.getToken(LadderLexer.FLOAT, 0);
+  if (token != null) {
+    text = token.symbol.text.toLowerCase();
+    head = text.substr(0,1);
+    if ((head === 'k') || (head === '#')) {
+      text = text.substr(1);
+    }
+    var val = parseFloat(text);
+    return {
+      "type":"num",
+      "dataType":"float",
+      "value":val
+    };
+  }
+  throw {"error": "Internal error."};
 };
 
 
 // Visit a parse tree produced by LadderParser#numInt.
 LadderVisitor.prototype.visitNumInt = function(ctx) {
-  return this.visitChildren(ctx);
+  var token = ctx.getToken(LadderLexer.INTEGER, 0);
+  if (token != null) {
+    text = token.symbol.text.toLowerCase();
+    head = text.substr(0,1);
+    if ((head === 'k') || (head === '#')) {
+      text = text.substr(1);
+    }
+    var val = parseInt(text);
+    return {
+      "type":"num",
+      "dataType":"int",
+      "value":val
+    };
+  }
+  throw {"error": "Internal error."};
 };
 
 

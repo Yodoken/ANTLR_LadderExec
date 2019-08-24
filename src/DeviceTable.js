@@ -15,7 +15,7 @@ function parseRelayDevNo(text) {
   
 //////////////////
 // DeviceTable
-exports.deviceTable = [
+deviceTable = [
     {
         "prefix": "dm",
         "devType": 0,
@@ -41,3 +41,18 @@ exports.deviceTable = [
         "max": 12
     }
 ];
+
+exports.deviceTable = deviceTable;
+
+
+exports.getDevType = function(prefix) {
+    pre = prefix.toLowerCase();
+    var dev = deviceTable.find(function(v) {
+        return v.prefix.toLowerCase() === pre;
+    });
+    if (dev) {
+        return dev.devType;
+    } else {
+        return undefined;
+    }
+}
