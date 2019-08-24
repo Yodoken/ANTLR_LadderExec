@@ -8,13 +8,14 @@ try {
     ladder.writeDev('DM2', 40);
     ladder.writeDev('R0', true);
     ladder.writeDev('R1', true);
-    ladder.writeDev('R100', true);
+    ladder.writeDev('R100', false);
     
-    ladder.execute("LD R0\nMOV DM0 DM2");
+    ladder.execute("LD R0\nMOV DM0 DM2\nLDB R100\nCAL+ DM10 DM1 DM2");
     
     console.log('DM0:'+ladder.readDev('DM0'));
     console.log('DM1:'+ladder.readDev('DM1'));
     console.log('DM2:'+ladder.readDev('DM2'));
+    console.log('DM10:'+ladder.readDev('DM10'));
 } catch(e) {
     console.log('Error: '+e.error);
     console.log('Line: '+e.line);
