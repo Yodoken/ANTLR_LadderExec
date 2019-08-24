@@ -1,8 +1,8 @@
 
 
-function getValue(ctx, operand) {
+function getWord(ctx, operand) {
     if (operand.type === 'dev') {
-        return ctx.devPool.read(operand.device);
+        return ctx.devPool.readWord(operand.device);
     } else if (operand.type === 'num') {
         return operand.value;
     } else {
@@ -18,7 +18,7 @@ exports.instructionTable = [
         "operand": [['dev']],
         "left": true,
         "exec": function(ctx) {
-            ctx.ba = getValue(ctx, ctx.op[0]);
+            ctx.ba = ctx.devPool.readBit(ctx.op[0].device);
         }
     },
     {
@@ -26,7 +26,7 @@ exports.instructionTable = [
         "operand": [['dev']],
         "left": true,
         "exec": function(ctx) {
-            ctx.ba = !getValue(ctx, ctx.op[0]);
+            ctx.ba = !ctx.devPool.readBit(ctx.op[0].device);
         }
     },
     {
@@ -36,9 +36,9 @@ exports.instructionTable = [
         "exec": function(ctx) {
             // ###mada サフィックスの扱い
             if (ctx.ba) {
-                var value = getValue(ctx, ctx.op[0]);
+                var value = getWord(ctx, ctx.op[0]);
                 if (value) {
-                    ctx.devPool.write(ctx.op[1].device, value);
+                    ctx.devPool.writeWord(ctx.op[1].device, value);
                 } else {
                     throw {"error": "Invalid operand type."}
                 }
@@ -52,12 +52,12 @@ exports.instructionTable = [
         "exec": function(ctx) {
             // ###mada サフィックスの扱い
             if (ctx.ba) {
-                var lhs = getValue(ctx, ctx.op[1]);
-                var rhs = getValue(ctx, ctx.op[2]);
-                if (lhs && rhs) {
-                    ctx.devPool.write(ctx.op[0].device, lhs + rhs);
+                var lhs = getWord(ctx, ctx.op[1]);
+                var rhs = getWord(ctx, ctx.op[2]);
+                if (lhs != undefined && rhs != undefined) {
+                    ctx.devPool.writeWord(ctx.op[0].device, lhs + rhs);
                 } else {
-                    throw {"error": "Unknown operand type."}
+                    throw new Error("Unknown operand type.");
                 }
             }
         }

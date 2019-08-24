@@ -149,7 +149,7 @@ LadderVisitor.prototype.visitOffsetDev = function(ctx) {
   }
 
   // 値を返す
-  var val = this.context.devPool.read(device);
+  var val = this.context.devPool.readSWord(device);
   return {
     "type": 'num',
     "dataType": 'int',

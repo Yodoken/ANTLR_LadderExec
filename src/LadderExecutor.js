@@ -13,16 +13,6 @@ function LadderExecutor() {
 LadderExecutor.prototype.constructor = LadderExecutor;
 
 
-LadderExecutor.prototype.writeDev = function(dev, val) {
-    return this.devPool.write(dev, val);
-}
-
-
-LadderExecutor.prototype.readDev = function(dev, val) {
-    return this.devPool.read(dev, val);
-}
-
-
 LadderExecutor.prototype.execute = function(mnemonicList) {
     var chars = new antlr4.InputStream(mnemonicList);
     var lexer = new LadderLexer(chars);

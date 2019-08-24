@@ -4,11 +4,18 @@ var deviceTable = require('./DeviceTable').deviceTable;
 function DevicePool() {
 	this.devPool = {};
 	// デバイス種別ごとの入れ物を用意
-	for(i = 0; i < deviceTable.length; i++) {
-		this.devPool[deviceTable[i].devType] = {};
+	for (d of deviceTable) {
+		var bytes = (d.max - d.min + 1) * d.bitSize / 8;
+		var buffer = new ArrayBuffer(bytes);
+		var view = new DataView(buffer);
+		this.devPool[d.devType] = {
+			"view": view,
+			"def": d
+		};
 	}
 	return this;
 }
+
 
 DevicePool.prototype.constructor = DevicePool;
 
@@ -28,64 +35,128 @@ function isValidDevice(dev) {
 	return false;
 }
 
-DevicePool.prototype.write = function(dev, val) {
-	// 引数チェック
+function validateDevice(dev) {
 	if (typeof dev === "string") {
 		// 文字列の場合はパースする
-		device = parseDevice(dev);
-		if ("error" in device) {
-			throw device;
-		}
+		return parseDevice(dev);
 	} else if (typeof dev === "object") {
 		if (!("devType" in dev) || !("devNo" in dev)) {
-			throw {"error": "dev argument is invalid."};
+			return {"error": "dev argument is invalid."};
 		}
 		if (!isValidDevice(dev)) {
-			throw {"error": "Invalid device."};
+			return {"error": "Invalid device."};
 		}
-		if (!(typeof val === 'number') && !(typeof val === 'boolean')) {
-			throw {"error": "Invalid value."};
-		}
-		device = dev;
+		return dev;
 	} else {
-		throw {"error": "Type of dev argument is invalid."};
+		return {"error": "Type of dev argument is invalid."};
+	}
+}
+
+
+DevicePool.prototype.writeBit = function(dev, val) {
+	// ### mada ワードのビット扱い
+	// 引数チェック
+	var device = validateDevice(dev);
+	if ("error" in device) {
+		throw new Error(device.error);
+	}
+	if (!(typeof val === 'boolean')) {
+		throw new Error("Invalid value.");
 	}
 
-	// デバイスプールに登録or上書き
-	this.devPool[device.devType][device.devNo]=val;
+	// デバイスプールに書き込み
+	var v = this.devPool[device.devType].view;
+	var offset = device.devNo / 16;
+	var mask = 0x0001 << (device.devNo % 16);
+	var ch = v.getUint16(offset);
+	ch = val ? ch | mask : ch & ~mask;
+	v.setUint16(offset, ch);
+	
 	return true;
 };
 
-DevicePool.prototype.read = function(dev) {
+
+DevicePool.prototype.readBit = function(dev, val) {
+	// ### mada ワードのビット扱い
 	// 引数チェック
-	if (typeof dev === "string") {
-		// 文字列の場合はパースする
-		device = parseDevice(dev);
-		if ("error" in device) {
-			throw device;
-		}
-	} else if (typeof dev === "object") {
-		if (!("devType" in dev) || !("devNo" in dev)) {
-			throw {"error": "Invalid argument."};
-		}
-		if (!isValidDevice(dev)) {
-			throw {"error": "Invalid device."};
-		}
-		device = dev;
-	} else {
-		throw {"error": "Type of dev argument is invalid."};
-	}
-	// デバイスプールにすでに登録されていたら、その値を返す。
-	if (device.devNo in this.devPool[device.devType]) {
-		return this.devPool[device.devType][device.devNo];
+	var device = validateDevice(dev);
+	if ("error" in device) {
+		throw new Error(device.error);
 	}
 
-	// 未登録のデバイスは初期値を返す。
-	if (dev.bitSize === 1) {
-		return false;
-	} else {
-		return 0;
+	// デバイスプールに登録or上書き
+	var v = this.devPool[device.devType].view;
+	var offset = device.devNo / 16;
+	var mask = 0x0001 << (device.devNo % 16);
+	return v.getUint16(offset) & mask ? true : false;
+};
+
+
+DevicePool.prototype.writeWord = function(dev, val) {
+	// ### mada ビットのワード扱い
+	// 引数チェック
+	var device = validateDevice(dev);
+	if ("error" in device) {
+		throw {"error": device.error};
 	}
+	if (!(typeof val === 'number')) {
+		throw new Error("Invalid value.");
+	}
+
+	// デバイスプールに書き込み
+	var v = this.devPool[device.devType].view;
+	var offset = device.devNo * this.devPool[device.devType].def.bitSize / 8;
+	v.setUint16(offset, val);
+	return true;
+};
+
+
+DevicePool.prototype.writeSWord = function(dev, val) {
+	// ### mada ビットのワード扱い
+	// 引数チェック
+	var device = validateDevice(dev);
+	if ("error" in device) {
+		throw {"error": device.error};
+	}
+	if (!(typeof val === 'number')) {
+		throw new Error("Invalid value.");
+	}
+
+	// デバイスプールに書き込み
+	var v = this.devPool[device.devType].view;
+	var offset = device.devNo * this.devPool[device.devType].def.bitSize / 8;
+	v.setInt16(offset, val);
+	return true;
+};
+
+
+DevicePool.prototype.readWord = function(dev) {
+	// ### mada ビットのワード扱い
+	// 引数チェック
+	var device = validateDevice(dev);
+	if ("error" in device) {
+		throw new Error(device.error);
+	}
+
+	// デバイスプールに書き込み
+	var v = this.devPool[device.devType].view;
+	var offset = device.devNo * this.devPool[device.devType].def.bitSize / 8;
+	return v.getUint16(offset);
+};
+
+
+DevicePool.prototype.readSWord = function(dev) {
+	// ### mada ビットのワード扱い
+	// 引数チェック
+	var device = validateDevice(dev);
+	if ("error" in device) {
+		throw new Error(device.error);
+	}
+
+	// デバイスプールに書き込み
+	var v = this.devPool[device.devType].view;
+	var offset = dev.devNo * this.devPool[device.devType].def.bitSize / 8;
+	return v.getInt16(offset);
 };
 
 
