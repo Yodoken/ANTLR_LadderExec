@@ -38,22 +38,50 @@ LadderVisitor.prototype.visitMnemonicList = function(ctx) {
 
 // Visit a parse tree produced by LadderParser#mnemonic.
 LadderVisitor.prototype.visitMnemonic = function(ctx) {
-  // コンテキストを更新
-  instName = ctx.inst.text.toLowerCase();
-
-  this.context.inst.name = instName;
-  this.context.op = [];
-  
   // 命令語テーブルから命令語の定義情報を取得
+  var instName = ctx.inst.text.toLowerCase();
   var instDef = instructionTable.find(function(v) {
     return v.name.toLowerCase() === instName;
   });
   if (!instDef) {
     throw {
-      "error": "Unknown Instruction'"+instName+"'.",
+      "error": "Unknown Instruction:'"+instName+"'.",
       "line": ctx.start.line,
       "col": ctx.start.start
     };
+  }
+
+  // サフィックスをチェック
+  var suffix = "";
+  if (instDef.suffix) {
+    // サフィックスをサポートしている命令語の場合
+    if (ctx.sfx) {
+      suffix = ctx.sfx.text.substr(1).toLowerCase();  //'.'を除く
+      
+      // 記述されたサフィックスをサポートしているかどうかを確認
+      var sfx = instDef.suffix.find(function(v) {
+        return v === suffix;
+      });
+      if (!sfx) {
+        throw {
+          "error": "Invalid suffix.",
+          "line": ctx.start.line,
+          "col": ctx.start.start
+        };
+      }
+    } else {
+      // サフィックスを省略された場合は.Uがデフォルト
+      suffix = 'u';
+    }
+  } else {
+    if (ctx.sfx) {
+      // サフィックスをサポートしていないのに記述されたらエラー
+      throw {
+        "error": "Suffix not supported.",
+        "line": ctx.start.line,
+        "col": ctx.start.start
+      };
+    }
   }
 
   // オペランドの数をチェック
@@ -66,6 +94,11 @@ LadderVisitor.prototype.visitMnemonic = function(ctx) {
     };
   }
 
+  // コンテキストをセット
+  this.context.inst.name = instName;
+  this.context.inst.suffix = suffix;
+  this.context.op = [];
+  
   // オペランドの解析と種別チェック
   for (i = 0; i < ctx.op.length; i++) {
     var op = this.visit(ctx.op[i])[0];

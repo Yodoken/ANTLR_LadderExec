@@ -68,9 +68,9 @@ DevicePool.prototype.writeBit = function(dev, val) {
 	var v = this.devPool[device.devType].view;
 	var offset = device.devNo / 16;
 	var mask = 0x0001 << (device.devNo % 16);
-	var ch = v.getUint16(offset);
+	var ch = v.getUint16(offset, true);
 	ch = val ? ch | mask : ch & ~mask;
-	v.setUint16(offset, ch);
+	v.setUint16(offset, ch, true);
 	
 	return true;
 };
@@ -88,7 +88,7 @@ DevicePool.prototype.readBit = function(dev, val) {
 	var v = this.devPool[device.devType].view;
 	var offset = device.devNo / 16;
 	var mask = 0x0001 << (device.devNo % 16);
-	return v.getUint16(offset) & mask ? true : false;
+	return v.getUint16(offset, true) & mask ? true : false;
 };
 
 
@@ -106,7 +106,7 @@ DevicePool.prototype.writeWord = function(dev, val) {
 	// デバイスプールに書き込み
 	var v = this.devPool[device.devType].view;
 	var offset = device.devNo * this.devPool[device.devType].def.bitSize / 8;
-	v.setUint16(offset, val);
+	v.setUint16(offset, val, true);
 	return true;
 };
 
@@ -125,7 +125,51 @@ DevicePool.prototype.writeSWord = function(dev, val) {
 	// デバイスプールに書き込み
 	var v = this.devPool[device.devType].view;
 	var offset = device.devNo * this.devPool[device.devType].def.bitSize / 8;
-	v.setInt16(offset, val);
+	v.setInt16(offset, val, true);
+	return true;
+};
+
+
+DevicePool.prototype.writeDWord = function(dev, val) {
+	// ### mada ビットのワード扱い
+	// 引数チェック
+	var device = validateDevice(dev);
+	if ("error" in device) {
+		throw {"error": device.error};
+	}
+	if (!(typeof val === 'number')) {
+		throw new Error("Invalid value.");
+	}
+
+	// デバイスプールに書き込み
+	var v = this.devPool[device.devType].view;
+	var offset = device.devNo * this.devPool[device.devType].def.bitSize / 8;
+	if (this.devPool[device.devType].view.byteLength <= offset + 4) {
+		throw new Error("Device number is out of range:"+dev);
+	}
+	v.setUint32(offset, val, true);
+	return true;
+};
+
+
+DevicePool.prototype.writeSFloat = function(dev, val) {
+	// ### mada ビットのワード扱い
+	// 引数チェック
+	var device = validateDevice(dev);
+	if ("error" in device) {
+		throw {"error": device.error};
+	}
+	if (!(typeof val === 'number')) {
+		throw new Error("Invalid value.");
+	}
+
+	// デバイスプールに書き込み
+	var v = this.devPool[device.devType].view;
+	var offset = device.devNo * this.devPool[device.devType].def.bitSize / 8;
+	if (this.devPool[device.devType].view.byteLength <= offset + 4) {
+		throw new Error("Out of range:"+dev);
+	}
+	v.setFloat32(offset, val, true);
 	return true;
 };
 
@@ -141,7 +185,7 @@ DevicePool.prototype.readWord = function(dev) {
 	// デバイスプールに書き込み
 	var v = this.devPool[device.devType].view;
 	var offset = device.devNo * this.devPool[device.devType].def.bitSize / 8;
-	return v.getUint16(offset);
+	return v.getUint16(offset, true);
 };
 
 
@@ -156,8 +200,45 @@ DevicePool.prototype.readSWord = function(dev) {
 	// デバイスプールに書き込み
 	var v = this.devPool[device.devType].view;
 	var offset = dev.devNo * this.devPool[device.devType].def.bitSize / 8;
-	return v.getInt16(offset);
+	return v.getInt16(offset, true);
 };
+
+
+DevicePool.prototype.readDWord = function(dev) {
+	// ### mada ビットのワード扱い
+	// 引数チェック
+	var device = validateDevice(dev);
+	if ("error" in device) {
+		throw new Error(device.error);
+	}
+
+	// デバイスプールに書き込み
+	var v = this.devPool[device.devType].view;
+	var offset = device.devNo * this.devPool[device.devType].def.bitSize / 8;
+	if (this.devPool[device.devType].view.byteLength <= offset + 4) {
+		throw new Error("Out of range:"+dev);
+	}
+	return v.getUint32(offset, true);
+};
+
+
+DevicePool.prototype.readSFloat = function(dev) {
+	// ### mada ビットのワード扱い
+	// 引数チェック
+	var device = validateDevice(dev);
+	if ("error" in device) {
+		throw new Error(device.error);
+	}
+
+	// デバイスプールに書き込み
+	var v = this.devPool[device.devType].view;
+	var offset = device.devNo * this.devPool[device.devType].def.bitSize / 8;
+	if (this.devPool[device.devType].view.byteLength <= offset + 4) {
+		throw new Error("Out of range:"+dev);
+	}
+	return v.getFloat32(offset, true);
+};
+
 
 
 exports.DevicePool = DevicePool;
