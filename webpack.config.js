@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
   mode: 'development',
   entry: {
-    app: ["./src/index.js"]
+    app: ["./src/LadderExecutor.js"]
   },
   output: {
     filename: "./bundle.js",
