@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "antlr4-webpack-loader": "^0.1.1",
-    "karma": "^4.2.0",
+    "karma": "^6.3.14",
     "karma-chrome-launcher": "^3.1.0",
     "karma-jasmine": "^2.0.1",
     "karma-webpack": "^4.0.2",
